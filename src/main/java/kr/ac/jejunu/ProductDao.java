@@ -1,8 +1,5 @@
 package kr.ac.jejunu;
 
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.annotation.AnnotationConfigApplicationContext;
-
 import javax.sql.DataSource;
 import java.sql.*;
 
@@ -22,9 +19,10 @@ public class ProductDao{
         PreparedStatement preparedStatement = null;
         try {
             connection = dataSource.getConnection();
+            StatementStrategy statementStrategy = new GetStatementStrategy(id);
+            preparedStatement = statementStrategy.makeStatement(connection);
 
-            preparedStatement = connection.prepareStatement("select * from product where id = ?");
-            preparedStatement.setLong(1, id);
+
 
             resultSet = preparedStatement.executeQuery();
             if (resultSet.next()) {
@@ -69,9 +67,9 @@ public class ProductDao{
         try {
             connection = dataSource.getConnection();
 
-            preparedStatement = connection.prepareStatement("insert into product (title, price) values(?,?)");
-            preparedStatement.setString(1, product.getTitle());
-            preparedStatement.setInt(2, product.getPrice());
+            StatementStrategy statementStrategy = new InsertStatementStrategy(product);
+            preparedStatement  = statementStrategy.makeStatement(connection);
+
 
             preparedStatement.executeUpdate();
 
@@ -88,15 +86,19 @@ public class ProductDao{
                     e.printStackTrace();
                 }
             }
-            try {
-                preparedStatement.close();
-            } catch (SQLException e) {
-                e.printStackTrace();
+            if (preparedStatement != null){
+                try {
+                    preparedStatement.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
             }
-            try {
-                connection.close();
-            } catch (SQLException e) {
-                e.printStackTrace();
+            if (connection != null) {
+                try {
+                    connection.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
             }
 
         }
@@ -110,37 +112,41 @@ public class ProductDao{
         PreparedStatement preparedStatement = null;
         try {
             connection = dataSource.getConnection();
+            StatementStrategy statementStrategy = new UpdataStatementStrategy(product);
 
-            preparedStatement = connection.prepareStatement("update product set title= ?, price=? where id = ?");
-            preparedStatement.setString(1, product.getTitle());
-            preparedStatement.setInt(2, product.getPrice());
-            preparedStatement.setLong(3, product.getId());
+            preparedStatement = statementStrategy.makeStatement(connection);
 
             preparedStatement.executeUpdate();
 
             } finally {
-            try {
-                preparedStatement.close();
-            } catch (SQLException e) {
-                e.printStackTrace();
+            if (preparedStatement !=null) {
+                try {
+                    preparedStatement.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
             }
-            try {
-                connection.close();
-            } catch (SQLException e) {
-                e.printStackTrace();
+            if (preparedStatement != null) {
+                try {
+                    connection.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
             }
 
         }
     }
+
 
     public void delete(Long id) throws SQLException {
         Connection connection = null;
         PreparedStatement preparedStatement = null;
         try {
             connection = dataSource.getConnection();
+            StatementStrategy statementStrategy = new DeleteStatementStrategy(id);
+            preparedStatement = statementStrategy.makeStatement(connection);
 
-            preparedStatement = connection.prepareStatement("delete from product where id=?");
-            preparedStatement.setLong(1, id);
+
 
             preparedStatement.executeUpdate();
 
