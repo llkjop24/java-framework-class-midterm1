@@ -16,45 +16,92 @@ public class ProductDao{
 
 
     public Product get(Long id) throws ClassNotFoundException, SQLException {
-        Connection connection = dataSource.getConnection();
+        Connection connection = null;
+        Product product = null;
+        ResultSet resultSet = null;
+        PreparedStatement preparedStatement = null;
+        try {
+            connection = dataSource.getConnection();
 
-        PreparedStatement preparedStatement = connection.prepareStatement("select * from product where id = ?");
-        preparedStatement.setLong(1, id);
+            preparedStatement = connection.prepareStatement("select * from product where id = ?");
+            preparedStatement.setLong(1, id);
 
-        ResultSet resultSet = preparedStatement.executeQuery();
-        resultSet.next();
+            resultSet = preparedStatement.executeQuery();
+            if (resultSet.next()) {
+                product = new Product();
+                product.setId(resultSet.getLong("id"));
+                product.setTitle(resultSet.getString("title"));
+                product.setPrice(resultSet.getInt("price"));
+            }
+        } finally {
+            if (resultSet != null) {
+                try {
+                    resultSet.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+            if (preparedStatement != null) {
 
-        Product product = new Product();
-        product.setId(resultSet.getLong("id"));
-        product.setTitle(resultSet.getString("title"));
-        product.setPrice(resultSet.getInt("price"));
+                try {
+                    preparedStatement.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+            if (connection != null) {
+                try {
+                    connection.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
 
-        //자원을 해지한다.
-        resultSet.close();
-        preparedStatement.close();
-        connection.close();
 
         return product;
     }
 
     public Long insert(Product product) throws SQLException, ClassNotFoundException {
-        Connection connection = dataSource.getConnection();
+        Connection connection = null;
+        PreparedStatement preparedStatement = null;
+        ResultSet resultSet = null;
+        Long id;
+        try {
+            connection = dataSource.getConnection();
 
-        PreparedStatement preparedStatement = connection.prepareStatement("insert into product (title, price) values(?,?)");
-        preparedStatement.setString(1, product.getTitle());
-        preparedStatement.setInt(2, product.getPrice());
+            preparedStatement = connection.prepareStatement("insert into product (title, price) values(?,?)");
+            preparedStatement.setString(1, product.getTitle());
+            preparedStatement.setInt(2, product.getPrice());
 
-        preparedStatement.executeUpdate();
+            preparedStatement.executeUpdate();
 
-        preparedStatement = connection.prepareStatement("select last_insert_id()");
+            preparedStatement = connection.prepareStatement("select last_insert_id()");
 
-        ResultSet resultSet = preparedStatement.executeQuery();
-        resultSet.next();
-        Long id = resultSet.getLong(1);
+            resultSet = preparedStatement.executeQuery();
+            resultSet.next();
+            id = resultSet.getLong(1);
+        } finally {
+            if (resultSet != null) {
+                try {
+                    resultSet.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+            try {
+                preparedStatement.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+            try {
+                connection.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
 
-        resultSet.close();
-        preparedStatement.close();
-        connection.close();
+        }
+
 
         return id;
     }
