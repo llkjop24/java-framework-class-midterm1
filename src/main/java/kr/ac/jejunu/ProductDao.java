@@ -1,14 +1,16 @@
 package kr.ac.jejunu;
 
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+
 import java.sql.*;
 
 public class ProductDao{
     private DaoFactory daoFactory;
     private ConnectionMaker connectionMaker;
 
-    public  ProductDao() {
-        daoFactory = new DaoFactory();
-        connectionMaker = daoFactory.connectionMaker();
+    public  ProductDao(ConnectionMaker connectionMaker) {
+        this.connectionMaker =connectionMaker;
     }
 
 
